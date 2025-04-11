@@ -21,6 +21,7 @@ connectDB();
 // Importing the user routes
 app.use('/', require('./routes/users'));
 app.use('/', require('./routes/posts'));
+app.use('/', require('./routes/comment'));
 
 // Checking the connection is connected or not with the database
 mongoose.connection.once('open', () => {

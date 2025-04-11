@@ -1,4 +1,6 @@
 const User = require('../model/User');
+const Post = require('../../posts/model/Post');
+const Comment = require('../../comment/model/Comment');
 
 const getUserDetails = async (req, res) => {
     try {
@@ -7,15 +9,41 @@ const getUserDetails = async (req, res) => {
             return res.status(404).json({ message: "No user details found" });
         }
 
+        const usersWithCommentCounts = [];
+
+        for (const user of users) {
+            const posts = await Post.find({ userId: user.userId });
+            let commentCount = 0;
+
+            for (const post of posts) {
+                const comments = await Comment.find({ postId: post.postId });
+                commentCount += comments.length;
+            }
+
+            usersWithCommentCounts.push({
+                userId: user.userId,
+                name: user.name,
+                totalCommentCount: commentCount
+            });
+        }
+
+        // Sort users by total comment count in descending order
+        usersWithCommentCounts.sort((a, b) => b.totalCommentCount - a.totalCommentCount);
+
+        // Select the top 5 users
+        const top5Users = usersWithCommentCounts.slice(0, 5);
+
         res.status(200).json({
-            message: "User details fetched successfully",
-            data: users
-        })
+            message: "Top 5 users by comment count fetched successfully",
+            data: top5Users
+        });
+
     } catch (error) {
-        console.error("Error fetching user details:", error);
+        console.error("Error fetching and processing user details:", error);
         res.status(500).json({ message: "Internal server error" });
     }
-}
+};
+
 
 const storeUserDetails = async (req, res) => {
     try {
